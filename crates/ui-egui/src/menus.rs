@@ -225,6 +225,7 @@ pub fn invoke(app: &mut TextureCraftApp, ctx: &egui::Context, id: &str) {
         "ui.recent.clear" => app.ui.recent.clear(),
         "ui.newProject" => crate::new_project_advanced::open(app),
         "ui.export" => app.ui.windows.export = true,
+        "file.removeUnused" => app.ui.windows.confirm_remove_unused = Some(app.session.project_id),
 
         // The mesh export options come first; their Export leads to the file choice
         "file.exportMesh" => app.ui.windows.mesh_export_options = Some(app.session.project_id),
@@ -454,6 +455,11 @@ fn effect_command<'a>(app: &TextureCraftApp, id: &'a str) -> &'a str {
 
 /// Runs the commands bound to the keys pressed this frame, with no widget but the viewport focused, outside key capture
 pub fn shortcuts(app: &mut TextureCraftApp, ctx: &egui::Context) {
+    // The modal owns the keyboard, even before its buttons take focus.
+    if app.ui.windows.confirm_remove_unused == Some(app.session.project_id) {
+        return;
+    }
+
     if crate::keymap::capturing(ctx) || crate::framework::widget_has_keyboard(ctx) {
         return;
     }

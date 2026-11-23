@@ -32,6 +32,7 @@ pub fn show(app: &mut TextureCraftApp, ctx: &egui::Context) {
     crate::pbr_import::window(app, ctx);
     unsaved(app, ctx);
     reset_ui(app, ctx);
+    confirm_remove_unused(app, ctx);
     crate::named_layouts::show(app, ctx);
     crate::generator_preview_window::show(app, ctx);
 }
@@ -43,6 +44,42 @@ pub(crate) fn reset_ui_keys(app: &mut TextureCraftApp, input: &mut egui::InputSt
     } else if nothing_focused && input.consume_key(egui::Modifiers::NONE, egui::Key::Enter) {
         app.ui.adopt_layout(crate::UiState::default());
         app.ui.windows.confirm_reset_ui = false;
+    }
+}
+
+fn confirm_remove_unused(app: &mut TextureCraftApp, ctx: &egui::Context) {
+    let Some(project) = app.ui.windows.confirm_remove_unused else { return };
+    if project != app.session.project_id {
+        app.ui.windows.confirm_remove_unused = None;
+        return;
+    }
+
+    let title = tr("Remove unused resources");
+    let response = egui::Modal::new(egui::Id::unique("remove_unused_resources")).show(ctx, |ui| {
+        ui.set_max_width(360.0);
+        ui.heading(title);
+        ui.label(tr("Remove resources with no references in this project? Undo restores them."));
+        ui.add_space(8.0);
+        ui.horizontal(|ui| {
+            let cancel = ui.button(tr("Cancel")).clicked();
+            let remove = ui.add(primary_button(ui, tr("Remove"))).clicked();
+            (remove, cancel)
+        })
+        .inner
+    });
+    response.response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Dialog, true, title));
+    let (remove, cancel) = response.inner;
+    if remove || cancel || response.should_close() {
+        app.ui.windows.confirm_remove_unused = None;
+    }
+    if remove && let Some(value) = app.run("file.removeUnused", json!({})) {
+        let removed = value["removed"].as_array().map_or(0, Vec::len);
+        let message = match removed {
+            0 => tr("No unused resources to remove.").to_owned(),
+            1 => tr("Removed 1 unused resource.").to_owned(),
+            count => trf("Removed {count} unused resources.", &[("count", &count)]),
+        };
+        app.toast(message, false);
     }
 }
 
