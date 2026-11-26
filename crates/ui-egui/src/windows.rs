@@ -79,7 +79,9 @@ pub(crate) fn confirm_remove_unused(app: &mut TextureCraftApp, ui: &mut Ui) {
     if !open {
         app.ui.windows.confirm_remove_unused = None;
     }
-    if response.picked == Some(1) && let Some(value) = app.run("file.removeUnused", json!({})) {
+    if response.picked == Some(1)
+        && let Some(value) = app.run("file.removeUnused", json!({}))
+    {
         let removed = value["removed"].as_array().map_or(0, Vec::len);
         let message = match removed {
             0 => tr("No unused resources to remove.").to_owned(),
