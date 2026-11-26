@@ -118,6 +118,11 @@ fn removing_unused_resources_asks_before_cleanup_and_reports_the_result() {
     invoke(&mut h, "file.removeUnused");
     h.run_steps(2);
     assert!(contains(&h, &unused), "the menu waits for confirmation");
+    let hide_ui = h.state().ui.hide_ui;
+    h.key_press(egui::Key::Tab);
+    h.run_steps(2);
+    assert_eq!(h.state().ui.hide_ui, hide_ui, "Tab in the confirmation does not hide the panels");
+    assert!(h.get_by_label("Cancel").is_focused() || h.get_by_label("Remove").is_focused(), "Tab focuses a button in the confirmation");
     h.get_by_label("Cancel").click();
     h.run_steps(2);
     assert!(contains(&h, &unused));

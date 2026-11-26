@@ -1305,6 +1305,7 @@ impl eframe::App for TextureCraftApp {
         }
 
         windows::show(self, &ctx);
+        windows::confirm_remove_unused(self, ui);
 
         // Finish after the dock and windows have requested their thumbnails
         self.layer_panel.end(&ctx, &self.session);

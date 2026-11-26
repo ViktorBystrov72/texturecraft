@@ -415,6 +415,9 @@ pub fn forwarded_shortcuts(app: &mut TextureCraftApp, ctx: &egui::Context, event
     }
     app.bindings.sync(&app.ui.keymap, craft_keymap::egui::platform(ctx));
     for event in events {
+        if crate::windows::remove_unused_confirmation_open(app) {
+            break;
+        }
         let event = forwarded_press(&app.bindings, event, held);
         if !matches!(event, egui::Event::Key { pressed: true, repeat: false, .. }) {
             continue;
@@ -456,7 +459,7 @@ fn effect_command<'a>(app: &TextureCraftApp, id: &'a str) -> &'a str {
 /// Runs the commands bound to the keys pressed this frame, with no widget but the viewport focused, outside key capture
 pub fn shortcuts(app: &mut TextureCraftApp, ctx: &egui::Context) {
     // The modal owns the keyboard, even before its buttons take focus.
-    if app.ui.windows.confirm_remove_unused == Some(app.session.project_id) {
+    if crate::windows::remove_unused_confirmation_open(app) {
         return;
     }
 
@@ -576,6 +579,9 @@ pub fn shortcuts(app: &mut TextureCraftApp, ctx: &egui::Context) {
     }
 
     for id in &commands_to_invoke {
+        if crate::windows::remove_unused_confirmation_open(app) {
+            break;
+        }
         run_shortcut(app, ctx, id);
     }
 }
